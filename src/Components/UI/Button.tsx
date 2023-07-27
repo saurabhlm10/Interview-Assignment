@@ -1,3 +1,5 @@
+'use client'
+
 import { ButtonHTMLAttributes, FC } from "react";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
