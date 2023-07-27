@@ -1,6 +1,7 @@
 "use client";
 
 import Button from "@/Components/UI/Button";
+import LoadingSVG from "@/Components/UI/LoadingSVG";
 import { EmptyUser } from "@/Constants/emptyUser";
 import { compareObjects } from "@/Helpers/compareObjects";
 import userFormSchema from "@/Models/UserFormSchema";
@@ -27,18 +28,25 @@ interface SelectorProps {
 interface InitialStateType {
   updateLoading: boolean;
   deleteLoading: boolean;
+  getUserLoading: boolean;
 }
 
 const initialState: InitialStateType = {
   updateLoading: false,
   deleteLoading: false,
+  getUserLoading: false,
 };
 
-type Action = { type: "SET_UPDATE_LOADING" } | { type: "SET_DELETE_LOADING" };
+type Action =
+  | { type: "SET_UPDATE_LOADING" }
+  | { type: "SET_DELETE_LOADING" }
+  | { type: "SET_GETUSER_LOADING" };
 
 // reducer function
 const reducer = (state: InitialStateType, action: Action) => {
   switch (action.type) {
+    case "SET_GETUSER_LOADING":
+      return { ...state, updateLoading: !state.getUserLoading };
     case "SET_UPDATE_LOADING":
       return { ...state, updateLoading: !state.updateLoading };
     case "SET_DELETE_LOADING":
@@ -57,6 +65,8 @@ const Page: FC<pageProps> = ({ params }) => {
   const { currentUser }: SelectorProps = useSelector(userState);
 
   const getUserById = async (id: string) => {
+    reducerDispatch({ type: "SET_UPDATE_LOADING" });
+
     try {
       const response = await axiosBackendInstance.get(`/user/${id}`);
 
@@ -76,6 +86,8 @@ const Page: FC<pageProps> = ({ params }) => {
       if (error instanceof Error) {
         toast.error(error.message);
       }
+    } finally {
+      reducerDispatch({ type: "SET_UPDATE_LOADING" });
     }
   };
 
@@ -86,7 +98,7 @@ const Page: FC<pageProps> = ({ params }) => {
     const objectComparison = compareObjects(data, currentUser);
     if (objectComparison) {
       reducerDispatch({ type: "SET_UPDATE_LOADING" });
-      return ;
+      return;
     }
 
     try {
@@ -156,114 +168,123 @@ const Page: FC<pageProps> = ({ params }) => {
 
   return (
     <div className="w-full flex justify-center items-center">
-      <form
-        className="w-1/4 bg-white dark:bg-neutral-700 rounded mt-8 py-4 px-4 text-xl"
-        onSubmit={handleSubmit(updateUser)}
-      >
-        {/* Input Fields Container */}
-        <div className="flex flex-row justify-between mb-2">
-          <h5 className="text-neutral-800 dark:text-neutral-50 mb-4 flex flex-row gap-4">
-            First Name:
-          </h5>
-          <div>
-            <input
-              {...register("firstName")}
-              type="text"
-              className="p-0.5 bg-white text-black rounded-lg focus:outline-none"
-              defaultValue={currentUser.firstName}
-            />
-            <div
-              className={`text-red-300 text-xs
+      {state.getUserLoading ? (
+        <div className="mt-4 flex flex-col items-center">
+          <LoadingSVG className="w-20 h-20 animate-spin" />
+          <h1 className="mt-2 text-2xl">Fetching Users</h1>
+        </div>
+      ) : (
+        <form
+          className="w-1/4 bg-white dark:bg-neutral-700 rounded mt-8 py-4 px-4 text-xl"
+          onSubmit={handleSubmit(updateUser)}
+        >
+          {/* Input Fields Container */}
+          <div className="flex flex-row justify-between mb-2">
+            <h5 className="text-neutral-800 dark:text-neutral-50 mb-4 flex flex-row gap-4">
+              First Name:
+            </h5>
+            <div>
+              <input
+                {...register("firstName")}
+                type="text"
+                className="p-0.5 bg-white text-black rounded-lg focus:outline-none"
+                defaultValue={currentUser.firstName}
+              />
+              <div
+                className={`text-red-300 text-xs
               ${errors.firstName ? "block" : "invisible"}
               `}
-            >
-              <div>
-                {errors.firstName ? errors.firstName.message : "default"}
+              >
+                <div>
+                  {errors.firstName ? errors.firstName.message : "default"}
+                </div>
               </div>
             </div>
           </div>
-        </div>
-        <div className="flex flex-row justify-between  mb-2">
-          <h5 className="text-neutral-800 dark:text-neutral-50 mb-4 flex flex-row gap-4">
-            Last Name:
-          </h5>
-          <div>
-            <input
-              {...register("lastName")}
-              type="text"
-              className="p-0.5 bg-white text-black rounded-lg focus:outline-none"
-              defaultValue={currentUser.lastName}
-            />
-            <div
-              className={`text-red-300 text-xs
+          <div className="flex flex-row justify-between  mb-2">
+            <h5 className="text-neutral-800 dark:text-neutral-50 mb-4 flex flex-row gap-4">
+              Last Name:
+            </h5>
+            <div>
+              <input
+                {...register("lastName")}
+                type="text"
+                className="p-0.5 bg-white text-black rounded-lg focus:outline-none"
+                defaultValue={currentUser.lastName}
+              />
+              <div
+                className={`text-red-300 text-xs
               ${errors.lastName ? "block" : "invisible"}
               `}
-            >
-              <div>{errors.lastName ? errors.lastName.message : "default"}</div>
-            </div>
-          </div>
-        </div>
-        <div className="flex flex-row justify-between  mb-2">
-          <h5 className="text-neutral-800 dark:text-neutral-50 mb-4 flex flex-row gap-4">
-            Age:
-          </h5>
-          <div>
-            <input
-              {...register("age", {
-                valueAsNumber: true,
-              })}
-              type="number"
-              className="p-0.5 bg-white text-black rounded-lg focus:outline-none"
-              defaultValue={currentUser.age}
-            />
-            <div
-              className={`text-red-300 text-xs
-              ${errors.age ? "block" : "invisible"}
-              `}
-            >
-              <div>{errors.age ? errors.age.message : "default"}</div>
-            </div>
-          </div>
-        </div>
-        <div className="flex flex-row justify-between  mb-2">
-          <h5 className="text-neutral-800 dark:text-neutral-50 mb-4 flex flex-row gap-4">
-            Phone Number:
-          </h5>
-          <div>
-            <input
-              {...register("phoneNumber")}
-              type="text"
-              className="p-0.5 bg-white text-black rounded-lg focus:outline-none"
-              defaultValue={currentUser.phoneNumber}
-            />
-            <div
-              className={`text-red-300 text-xs
-              ${errors.phoneNumber ? "block" : "invisible"}
-              `}
-            >
-              <div>
-                {errors.phoneNumber ? errors.phoneNumber.message : "default"}
+              >
+                <div>
+                  {errors.lastName ? errors.lastName.message : "default"}
+                </div>
               </div>
             </div>
           </div>
-        </div>
+          <div className="flex flex-row justify-between  mb-2">
+            <h5 className="text-neutral-800 dark:text-neutral-50 mb-4 flex flex-row gap-4">
+              Age:
+            </h5>
+            <div>
+              <input
+                {...register("age", {
+                  valueAsNumber: true,
+                })}
+                type="number"
+                className="p-0.5 bg-white text-black rounded-lg focus:outline-none"
+                defaultValue={currentUser.age}
+              />
+              <div
+                className={`text-red-300 text-xs
+              ${errors.age ? "block" : "invisible"}
+              `}
+              >
+                <div>{errors.age ? errors.age.message : "default"}</div>
+              </div>
+            </div>
+          </div>
+          <div className="flex flex-row justify-between  mb-2">
+            <h5 className="text-neutral-800 dark:text-neutral-50 mb-4 flex flex-row gap-4">
+              Phone Number:
+            </h5>
+            <div>
+              <input
+                {...register("phoneNumber")}
+                type="text"
+                className="p-0.5 bg-white text-black rounded-lg focus:outline-none"
+                defaultValue={currentUser.phoneNumber}
+              />
+              <div
+                className={`text-red-300 text-xs
+              ${errors.phoneNumber ? "block" : "invisible"}
+              `}
+              >
+                <div>
+                  {errors.phoneNumber ? errors.phoneNumber.message : "default"}
+                </div>
+              </div>
+            </div>
+          </div>
 
-        <div className="mt-4 flex flex-row gap-2 justify-end">
-          <Button
-            isLoading={state.updateLoading}
-            type="submit"
-            className="inline-block rounded bg-blue-500 px-6 pb-2 pt-2.5 text-xs font-medium uppercase leading-normal text-white shadow-[0_4px_9px_-4px_#3b71ca] transition duration-150 ease-in-out hover:bg-primary-600 hover:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)] focus:bg-primary-600 focus:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)] focus:outline-none focus:ring-0 active:bg-primary-700 active:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)] dark:shadow-[0_4px_9px_-4px_rgba(59,113,202,0.5)] dark:hover:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.2),0_4px_18px_0_rgba(59,113,202,0.1)] dark:focus:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.2),0_4px_18px_0_rgba(59,113,202,0.1)] dark:active:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.2),0_4px_18px_0_rgba(59,113,202,0.1)]"
-            text="Update"
-          />
-          <Button
-            isLoading={state.deleteLoading}
-            type="button"
-            className="inline-block rounded bg-red-500 px-6 pb-2 pt-2.5 text-xs font-medium uppercase leading-normal text-white shadow-[0_4px_9px_-4px_#3b71ca] transition duration-150 ease-in-out hover:bg-primary-600 hover:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)] focus:bg-primary-600 focus:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)] focus:outline-none focus:ring-0 active:bg-primary-700 active:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)] dark:shadow-[0_4px_9px_-4px_rgba(59,113,202,0.5)] dark:hover:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.2),0_4px_18px_0_rgba(59,113,202,0.1)] dark:focus:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.2),0_4px_18px_0_rgba(59,113,202,0.1)] dark:active:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.2),0_4px_18px_0_rgba(59,113,202,0.1)]"
-            onClick={deleteUser}
-            text="Delete"
-          />
-        </div>
-      </form>
+          <div className="mt-4 flex flex-row gap-2 justify-end">
+            <Button
+              isLoading={state.updateLoading}
+              type="submit"
+              className="inline-block rounded bg-blue-500 px-6 pb-2 pt-2.5 text-xs font-medium uppercase leading-normal text-white shadow-[0_4px_9px_-4px_#3b71ca] transition duration-150 ease-in-out hover:bg-primary-600 hover:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)] focus:bg-primary-600 focus:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)] focus:outline-none focus:ring-0 active:bg-primary-700 active:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)] dark:shadow-[0_4px_9px_-4px_rgba(59,113,202,0.5)] dark:hover:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.2),0_4px_18px_0_rgba(59,113,202,0.1)] dark:focus:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.2),0_4px_18px_0_rgba(59,113,202,0.1)] dark:active:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.2),0_4px_18px_0_rgba(59,113,202,0.1)]"
+              text="Update"
+            />
+            <Button
+              isLoading={state.deleteLoading}
+              type="button"
+              className="inline-block rounded bg-red-500 px-6 pb-2 pt-2.5 text-xs font-medium uppercase leading-normal text-white shadow-[0_4px_9px_-4px_#3b71ca] transition duration-150 ease-in-out hover:bg-primary-600 hover:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)] focus:bg-primary-600 focus:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)] focus:outline-none focus:ring-0 active:bg-primary-700 active:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.3),0_4px_18px_0_rgba(59,113,202,0.2)] dark:shadow-[0_4px_9px_-4px_rgba(59,113,202,0.5)] dark:hover:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.2),0_4px_18px_0_rgba(59,113,202,0.1)] dark:focus:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.2),0_4px_18px_0_rgba(59,113,202,0.1)] dark:active:shadow-[0_8px_9px_-4px_rgba(59,113,202,0.2),0_4px_18px_0_rgba(59,113,202,0.1)]"
+              onClick={deleteUser}
+              text="Delete"
+            />
+          </div>
+        </form>
+      )}
     </div>
   );
 };

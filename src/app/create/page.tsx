@@ -6,7 +6,7 @@ import axiosBackendInstance from "@/utils/axios";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { AxiosError } from "axios";
 import { useRouter } from "next/navigation";
-import { FC, useState } from "react";
+import { FC, useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import toast from "react-hot-toast/headless";
 
@@ -46,6 +46,12 @@ const Page: FC<pageProps> = ({}) => {
       setIsLoading(false);
     }
   };
+
+  useEffect(() => {
+    return () => {
+      setIsLoading(false);
+    };
+  }, []);
 
   return (
     <>

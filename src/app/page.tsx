@@ -34,6 +34,10 @@ export default function Home() {
   // Fetch All Users When The Page Loads
   useEffect(() => {
     getUsers();
+
+    return () => {
+      setIsLoading(false)
+    }
   }, []);
 
   return (
