@@ -38,19 +38,19 @@ const initialState: InitialStateType = {
 };
 
 type Action =
-  | { type: "SET_UPDATE_LOADING" }
-  | { type: "SET_DELETE_LOADING" }
-  | { type: "SET_GETUSER_LOADING" };
+  | { type: "SET_UPDATE_LOADING"; payload: boolean }
+  | { type: "SET_DELETE_LOADING"; payload: boolean }
+  | { type: "SET_GETUSER_LOADING"; payload: boolean };
 
 // reducer function
 const reducer = (state: InitialStateType, action: Action) => {
   switch (action.type) {
     case "SET_GETUSER_LOADING":
-      return { ...state, updateLoading: !state.getUserLoading };
+      return { ...state, updateLoading: action.payload };
     case "SET_UPDATE_LOADING":
-      return { ...state, updateLoading: !state.updateLoading };
+      return { ...state, updateLoading: action.payload };
     case "SET_DELETE_LOADING":
-      return { ...state, deleteLoading: !state.deleteLoading };
+      return { ...state, deleteLoading: action.payload };
     default:
       return state;
   }
@@ -65,7 +65,7 @@ const Page: FC<pageProps> = ({ params }) => {
   const { currentUser }: SelectorProps = useSelector(userState);
 
   const getUserById = async (id: string) => {
-    reducerDispatch({ type: "SET_UPDATE_LOADING" });
+    reducerDispatch({ type: "SET_GETUSER_LOADING", payload: true });
 
     try {
       const response = await axiosBackendInstance.get(`/user/${id}`);
@@ -87,17 +87,17 @@ const Page: FC<pageProps> = ({ params }) => {
         toast.error(error.message);
       }
     } finally {
-      reducerDispatch({ type: "SET_UPDATE_LOADING" });
+      reducerDispatch({ type: "SET_GETUSER_LOADING", payload: false });
     }
   };
 
   const updateUser = async (data: UserFormData) => {
-    reducerDispatch({ type: "SET_UPDATE_LOADING" });
+    reducerDispatch({ type: "SET_UPDATE_LOADING", payload: true });
 
     // Compare Objects to see if updation API request is necessary or not
     const objectComparison = compareObjects(data, currentUser);
     if (objectComparison) {
-      reducerDispatch({ type: "SET_UPDATE_LOADING" });
+      reducerDispatch({ type: "SET_UPDATE_LOADING", payload: false });
       return;
     }
 
@@ -118,12 +118,12 @@ const Page: FC<pageProps> = ({ params }) => {
         toast.error(error.message);
       }
     } finally {
-      reducerDispatch({ type: "SET_UPDATE_LOADING" });
+      reducerDispatch({ type: "SET_UPDATE_LOADING", payload: false });
     }
   };
 
   const deleteUser = async () => {
-    reducerDispatch({ type: "SET_DELETE_LOADING" });
+    reducerDispatch({ type: "SET_DELETE_LOADING", payload: true });
 
     try {
       const response = await axiosBackendInstance.delete(
@@ -143,7 +143,7 @@ const Page: FC<pageProps> = ({ params }) => {
         toast.error(error.message);
       }
     } finally {
-      reducerDispatch({ type: "SET_DELETE_LOADING" });
+      reducerDispatch({ type: "SET_DELETE_LOADING", payload: false });
     }
   };
 
@@ -154,6 +154,11 @@ const Page: FC<pageProps> = ({ params }) => {
     return () => {
       // Set User Back To Empty User On Component Unmount
       dispatch(setCurrentUser(EmptyUser));
+
+      // Set Loading States Back To False
+      reducerDispatch({ type: "SET_GETUSER_LOADING", payload: false });
+      reducerDispatch({ type: "SET_UPDATE_LOADING", payload: false });
+      reducerDispatch({ type: "SET_DELETE_LOADING", payload: false });
     };
   }, [params.id]);
 

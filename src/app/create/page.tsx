@@ -49,6 +49,7 @@ const Page: FC<pageProps> = ({}) => {
 
   useEffect(() => {
     return () => {
+      // Set Loading State Back To False
       setIsLoading(false);
     };
   }, []);

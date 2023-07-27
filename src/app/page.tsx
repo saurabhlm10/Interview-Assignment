@@ -36,6 +36,7 @@ export default function Home() {
     getUsers();
 
     return () => {
+      // Set Loading State Back To False
       setIsLoading(false)
     }
   }, []);
